@@ -2,10 +2,10 @@
 /**
  * Singleton trait
  *
- * @package Patterns
+ * @package Spectrum
  */
 
-namespace Eighteen73\Patterns;
+namespace Eighteen73\Spectrum;
 
 trait Singleton {
 

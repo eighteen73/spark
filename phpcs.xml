@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="Eighteen73-Patterns">
-	<description>Eighteen73 Patterns</description>
+<ruleset name="Eighteen73-Spectrum">
+	<description>Eighteen73 Spectrum</description>
 
 	<!-- Scan all files in directory -->
 	<file>.</file>

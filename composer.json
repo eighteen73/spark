@@ -1,6 +1,6 @@
 {
-	"name": "eighteen73/patterns",
-	"description": "Patterns for the Spark theme",
+	"name": "eighteen73/spectrum",
+	"description": "A collection of block patterns for WordPress.",
 	"type": "wordpress-plugin",
 	"require-dev": {
 		"eighteen73/wordpress-coding-standards": "^2.0"
