@@ -20,8 +20,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Useful global constants.
-define( 'PATTERNS_URL', plugin_dir_url( __FILE__ ) );
-define( 'PATTERNS_PATH', plugin_dir_path( __FILE__ ) );
+define( 'SPECTRUM_URL', plugin_dir_url( __FILE__ ) );
+define( 'SPECTRUM_PATH', plugin_dir_path( __FILE__ ) );
 
 // Require the autoloader.
 require_once 'autoload.php';

@@ -28,7 +28,7 @@ class Registration {
 	 * @return void
 	 */
 	public function register_patterns() {
-		$patterns_directory = PATTERNS_PATH . 'patterns';
+		$patterns_directory = SPECTRUM_PATH . 'patterns';
 
 		if ( ! file_exists( $patterns_directory ) ) {
 			return;
