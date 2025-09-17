@@ -7,6 +7,8 @@
 
 namespace Eighteen73\Spectrum;
 
+use WP_Block_Pattern_Categories_Registry;
+
 /**
  * Handles registration logic.
  */
@@ -18,7 +20,7 @@ class Registration {
 	 *
 	 * @return void
 	 */
-	public function setup() {
+	public function setup(): void {
 		add_action( 'init', [ $this, 'register_patterns' ] );
 	}
 
@@ -27,65 +29,148 @@ class Registration {
 	 *
 	 * @return void
 	 */
-	public function register_patterns() {
-		$patterns_directory = SPECTRUM_PATH . 'patterns';
+	public function register_patterns(): void {
+		$cache    = Cache::instance();
+		$patterns = $cache->get_patterns();
 
-		if ( ! file_exists( $patterns_directory ) ) {
-			return;
+		// If no cached patterns, try to fetch from API
+		if ( false === $patterns ) {
+			$api_client = ApiClient::instance();
+			$patterns   = $api_client->fetch_patterns();
+
+			// If API fetch was successful, cache the results
+			if ( ! is_wp_error( $patterns ) && is_array( $patterns ) ) {
+				$cache->set_patterns( $patterns );
+			} else {
+				// Log the error for debugging
+				if ( is_wp_error( $patterns ) ) {
+					error_log( 'Spectrum Plugin: Failed to fetch patterns - ' . $patterns->get_error_message() );
+				}
+
+				// Fall back to any existing cache or return early
+				$patterns = $cache->get_patterns();
+				if ( false === $patterns ) {
+					return;
+				}
+			}
 		}
 
-		$patterns = glob( $patterns_directory . '/**/*.php' );
-
+		// Register each pattern
 		foreach ( $patterns as $pattern ) {
-			$pattern_data = get_file_data(
-				$pattern,
-				[
-					'title'         => 'Title',
-					'slug'          => 'Slug',
-					'description'   => 'Description',
-					'viewportWidth' => 'Viewport Width',
-					'categories'    => 'Categories',
-					'keywords'      => 'Keywords',
-					'blockTypes'    => 'Block Types',
-					'postTypes'     => 'Post Types',
-					'templateTypes' => 'Template Types',
-					'inserter'      => 'Inserter',
-				]
-			);
-
-			if ( empty( $pattern_data['slug'] ) ) {
+			if ( empty( $pattern['name'] ) || empty( $pattern['title'] ) || empty( $pattern['content'] ) ) {
 				continue;
 			}
 
-			if ( ! empty( $pattern_data['categories'] ) ) {
-				$pattern_data['categories'] = array_map( 'trim', explode( ',', $pattern_data['categories'] ) );
+			// Prepare pattern data for registration
+			$pattern_data = [
+				'title'   => $pattern['title'],
+				'content' => $pattern['content'],
+			];
+
+			// Add optional properties if they exist
+			if ( ! empty( $pattern['description'] ) ) {
+				$pattern_data['description'] = $pattern['description'];
 			}
 
-			if ( ! empty( $pattern_data['keywords'] ) ) {
-				$pattern_data['keywords'] = array_map( 'trim', explode( ',', $pattern_data['keywords'] ) );
+			if ( ! empty( $pattern['categories'] ) && is_array( $pattern['categories'] ) ) {
+				$pattern_data['categories'] = $this->ensure_pattern_categories( $pattern['categories'] );
 			}
 
-			if ( ! empty( $pattern_data['blockTypes'] ) ) {
-				$pattern_data['blockTypes'] = array_map( 'trim', explode( ',', $pattern_data['blockTypes'] ) );
+			if ( ! empty( $pattern['keywords'] ) && is_array( $pattern['keywords'] ) ) {
+				$pattern_data['keywords'] = $pattern['keywords'];
 			}
 
-			if ( ! empty( $pattern_data['postTypes'] ) ) {
-				$pattern_data['postTypes'] = array_map( 'trim', explode( ',', $pattern_data['postTypes'] ) );
+			if ( ! empty( $pattern['viewportWidth'] ) ) {
+				$pattern_data['viewportWidth'] = $pattern['viewportWidth'];
 			}
 
-			if ( ! empty( $pattern_data['templateTypes'] ) ) {
-				$pattern_data['templateTypes'] = array_map( 'trim', explode( ',', $pattern_data['templateTypes'] ) );
+			if ( ! empty( $pattern['blockTypes'] ) && is_array( $pattern['blockTypes'] ) ) {
+				$pattern_data['blockTypes'] = $pattern['blockTypes'];
 			}
 
-			ob_start();
-			include $pattern;
-			$pattern_data['content'] = ob_get_clean();
-
-			if ( ! $pattern_data['content'] ) {
-				continue;
+			if ( ! empty( $pattern['postTypes'] ) && is_array( $pattern['postTypes'] ) ) {
+				$pattern_data['postTypes'] = $pattern['postTypes'];
 			}
 
-			register_block_pattern( $pattern_data['slug'], $pattern_data );
+			if ( ! empty( $pattern['templateTypes'] ) && is_array( $pattern['templateTypes'] ) ) {
+				$pattern_data['templateTypes'] = $pattern['templateTypes'];
+			}
+
+			if ( isset( $pattern['inserter'] ) ) {
+				$pattern_data['inserter'] = $pattern['inserter'];
+			}
+
+			register_block_pattern( $pattern['name'], $pattern_data );
 		}
+	}
+
+	/**
+	 * Ensure pattern categories are registered, registering them if needed
+	 *
+	 * @param array $categories Array of category names
+	 * @return array Array of category names (all should be valid after registration)
+	 */
+	private function ensure_pattern_categories( $categories ): array {
+		$valid_categories = [];
+		$registry = \WP_Block_Pattern_Categories_Registry::get_instance();
+
+		foreach ( $categories as $category ) {
+			// Convert single category strings from API to expected format
+			$category_name = $this->map_api_category_to_wp_category( $category );
+
+			// If category is not registered, register it
+			if ( ! $registry->is_registered( $category_name ) ) {
+				$this->register_pattern_category( $category_name, $category );
+			}
+
+			$valid_categories[] = $category_name;
+		}
+
+		return $valid_categories;
+	}
+
+	/**
+	 * Register a single pattern category
+	 *
+	 * @param string $category_name The category slug
+	 * @param string $original_category The original category name from API
+	 * @return void
+	 */
+	private function register_pattern_category( $category_name, $original_category ): void {
+		$label = $this->generate_category_label( $category_name, $original_category );
+
+		register_block_pattern_category( $category_name, [
+			'label' => $label,
+		] );
+	}
+
+	/**
+	 * Map API category names to WordPress pattern category names
+	 *
+	 * @param string $api_category Category name from API
+	 * @return string WordPress pattern category name
+	 */
+	private function map_api_category_to_wp_category( $api_category ): string {
+		// If it already has spectrum prefix, use as-is
+		if ( strpos( $api_category, 'spectrum-' ) === 0 ) {
+			return $api_category;
+		}
+
+		// Otherwise, prefix with spectrum-
+		return 'spectrum-' . sanitize_title( $api_category );
+	}
+
+	/**
+	 * Generate a human-readable label for a category
+	 *
+	 * @param string $category_name The category slug
+	 * @return string Human-readable category label
+	 */
+	private function generate_category_label( $category_name ): string {
+		// Convert dashes to spaces and title case
+		$display_name = ucwords( str_replace( '-', ' ', $category_name ) );
+
+		// Add Spectrum prefix to the label
+		return sprintf( __( '%s', 'spectrum' ), $display_name );
 	}
 }
