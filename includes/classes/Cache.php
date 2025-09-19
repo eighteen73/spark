@@ -10,38 +10,39 @@ namespace Eighteen73\Spectrum;
 use WP_Error;
 
 /**
- * Handles caching of pattern data using WordPress Transients API.
+ * Handles storage of pattern data using WordPress Options API.
  */
 class Cache {
 	use Singleton;
 
 	/**
-	 * Cache key for storing patterns
+	 * Option key for storing patterns
 	 *
 	 * @var string
 	 */
-	private $cache_key = 'spectrum_patterns';
+	private $option_key = 'spectrum_patterns';
 
 	/**
-	 * Cache expiration time in seconds (12 hours)
+	 * Option key for storing last sync timestamp
 	 *
-	 * @var int
+	 * @var string
 	 */
-	private $cache_expiration = 12 * HOUR_IN_SECONDS;
+	private $sync_timestamp_key = 'spectrum_patterns_sync_timestamp';
 
 	/**
-	 * Get cached patterns
+	 * Get stored patterns
 	 *
-	 * @return array|false Array of patterns or false if not cached/expired
+	 * @return array|false Array of patterns or false if not stored
 	 */
 	public function get_patterns(): array|false {
-		return get_transient( $this->cache_key );
+		$patterns = get_option( $this->option_key, false );
+		return $patterns !== false && is_array( $patterns ) ? $patterns : false;
 	}
 
 	/**
-	 * Set patterns in cache
+	 * Set patterns in options table
 	 *
-	 * @param array $patterns Array of pattern data to cache
+	 * @param array $patterns Array of pattern data to store
 	 * @return bool True on success, false on failure
 	 */
 	public function set_patterns( $patterns ): bool {
@@ -49,60 +50,69 @@ class Cache {
 			return false;
 		}
 
-		return set_transient( $this->cache_key, $patterns, $this->cache_expiration );
+		$result = update_option( $this->option_key, $patterns );
+
+		// Update sync timestamp
+		if ( $result ) {
+			update_option( $this->sync_timestamp_key, current_time( 'timestamp' ) );
+		}
+
+		return $result;
 	}
 
 	/**
-	 * Clear the patterns cache
+	 * Clear the stored patterns
 	 *
 	 * @return bool True on success, false on failure
 	 */
 	public function clear_patterns(): bool {
-		return delete_transient( $this->cache_key );
+		$result = delete_option( $this->option_key );
+		delete_option( $this->sync_timestamp_key );
+		return $result;
 	}
 
 	/**
-	 * Check if patterns are cached and not expired
+	 * Check if patterns are stored
 	 *
-	 * @return bool True if cached patterns exist, false otherwise
+	 * @return bool True if patterns exist, false otherwise
 	 */
-	public function has_valid_cache(): bool {
+	public function has_patterns(): bool {
 		$patterns = $this->get_patterns();
 		return $patterns !== false && is_array( $patterns );
 	}
 
 	/**
-	 * Get cache status information
+	 * Get storage status information
 	 *
-	 * @return array Cache status with timestamp and expiration info
+	 * @return array Storage status with timestamp info
 	 */
-	public function get_cache_status(): array {
-		$transient_timeout = get_option( '_transient_timeout_' . $this->cache_key );
-		$has_cache = $this->has_valid_cache();
+	public function get_storage_status(): array {
+		$has_patterns = $this->has_patterns();
+		$last_sync = get_option( $this->sync_timestamp_key, false );
 
 		$status = [
-			'has_cache'  => $has_cache,
-			'cache_key'  => $this->cache_key,
-			'expiration' => $this->cache_expiration,
+			'has_patterns' => $has_patterns,
+			'option_key'   => $this->option_key,
 		];
 
-		if ( $transient_timeout ) {
-			$status['expires_at'] = $transient_timeout;
-			$status['expires_in'] = max( 0, $transient_timeout - time() );
-			$status['is_expired'] = time() > $transient_timeout;
+		if ( $last_sync ) {
+			$status['last_sync'] = $last_sync;
+			$status['last_sync_formatted'] = sprintf(
+				'%s (%s ago)',
+				date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $last_sync ),
+				human_time_diff( $last_sync, current_time( 'timestamp' ) )
+			);
 		}
 
 		return $status;
 	}
 
 	/**
-	 * Force refresh cache by clearing and fetching new data
+	 * Update patterns by fetching new data from API
 	 *
 	 * @return array|WP_Error Array of patterns on success, WP_Error on failure
 	 */
-	public function refresh_patterns(): array|WP_Error {
-		$this->clear_patterns();
-
+	public function update_patterns(): array|WP_Error {
 		$api_client = ApiClient::instance();
 		$patterns = $api_client->fetch_patterns();
 
@@ -111,5 +121,24 @@ class Cache {
 		}
 
 		return $patterns;
+	}
+
+	/**
+	 * Schedule weekly sync
+	 */
+	public function schedule_weekly_sync(): void {
+		if ( ! wp_next_scheduled( 'spectrum_weekly_sync' ) ) {
+			wp_schedule_event( time(), 'weekly', 'spectrum_weekly_sync' );
+		}
+	}
+
+	/**
+	 * Unschedule weekly sync
+	 */
+	public function unschedule_weekly_sync(): void {
+		$timestamp = wp_next_scheduled( 'spectrum_weekly_sync' );
+		if ( $timestamp ) {
+			wp_unschedule_event( $timestamp, 'spectrum_weekly_sync' );
+		}
 	}
 }
