@@ -20,7 +20,7 @@ class ApiClient {
 	 *
 	 * @var string
 	 */
-	private $api_endpoint = 'https://yiwxpfphcyrdpwutnggf.supabase.co/rest/v1/patterns?select=*';
+	private $api_endpoint;
 
 	/**
 	 * Fetch patterns from the remote API
@@ -28,21 +28,29 @@ class ApiClient {
 	 * @return array|WP_Error Array of patterns on success, WP_Error on failure
 	 */
 	public function fetch_patterns(): array|WP_Error {
-		$api_key = $this->get_api_key();
+		$credentials = $this->get_api_credentials();
+		$endpoint    = $this->get_api_endpoint();
 
-		if ( ! $api_key ) {
+		if ( ! $credentials ) {
 			return new WP_Error(
-				'spectrum_no_api_key',
-				__( 'Spectrum API key not found. Please define SPECTRUM_API_KEY in wp-config.php', 'spectrum' )
+				'spectrum_no_credentials',
+				__( 'Spectrum credentials not found. Please define SPECTRUM_API_USERNAME and SPECTRUM_API_PASSWORD in wp-config.php', 'spectrum' )
+			);
+		}
+
+		if ( ! $endpoint ) {
+			return new WP_Error(
+				'spectrum_no_uri',
+				__( 'Spectrum API URI not found. Please define SPECTRUM_API_URI in wp-config.php', 'spectrum' )
 			);
 		}
 
 		$response = wp_remote_get(
-			$this->api_endpoint,
+			$endpoint,
 			[
 				'headers' => [
-					'apikey'       => $api_key,
-					'Content-Type' => 'application/json',
+					'Authorization' => 'Basic ' . base64_encode( $credentials['username'] . ':' . $credentials['password'] ),
+					'Content-Type'  => 'application/json',
 				],
 				'timeout' => 30,
 			]
@@ -87,12 +95,31 @@ class ApiClient {
 	}
 
 	/**
-	 * Get the API key from wp-config.php
+	 * Get the API credentials from wp-config.php
 	 *
-	 * @return string|false API key or false if not found
+	 * @return array|false Array with username and password, or false if not found
 	 */
-	private function get_api_key(): string|false {
-		return defined( 'SPECTRUM_API_KEY' ) ? constant( 'SPECTRUM_API_KEY' ) : false;
+	private function get_api_credentials(): array|false {
+		$username = defined( 'SPECTRUM_API_USERNAME' ) ? constant( 'SPECTRUM_API_USERNAME' ) : false;
+		$password = defined( 'SPECTRUM_API_PASSWORD' ) ? constant( 'SPECTRUM_API_PASSWORD' ) : false;
+
+		if ( ! $username || ! $password ) {
+			return false;
+		}
+
+		return [
+			'username' => $username,
+			'password' => $password,
+		];
+	}
+
+	/**
+	 * Get the API URI from wp-config.php
+	 *
+	 * @return string|false API URI or false if not found
+	 */
+	private function get_api_endpoint(): string|false {
+		return defined( 'SPECTRUM_API_URI' ) ? constant( 'SPECTRUM_API_URI' ) : false;
 	}
 
 	/**
