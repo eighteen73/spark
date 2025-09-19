@@ -30,3 +30,6 @@ require_once 'autoload.php';
 // Initialise classes.
 Registration::instance()->setup();
 Admin::instance()->setup();
+
+// Schedule weekly sync
+Cache::instance()->schedule_weekly_sync();

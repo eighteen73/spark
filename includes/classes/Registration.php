@@ -44,7 +44,7 @@ class Registration {
 			} else {
 				// Log the error for debugging
 				if ( is_wp_error( $patterns ) ) {
-					error_log( 'Spectrum Plugin: Failed to fetch patterns - ' . $patterns->get_error_message() );
+					error_log( 'Spectrum: Failed to fetch patterns - ' . $patterns->get_error_message() );
 				}
 
 				// Fall back to any existing cache or return early
@@ -115,15 +115,15 @@ class Registration {
 		$registry = \WP_Block_Pattern_Categories_Registry::get_instance();
 
 		foreach ( $categories as $category ) {
-			// Convert single category strings from API to expected format
-			$category_name = $this->map_api_category_to_wp_category( $category );
+			// Use category directly as WordPress category slug
+			$category_slug = sanitize_title( $category );
 
 			// If category is not registered, register it
-			if ( ! $registry->is_registered( $category_name ) ) {
-				$this->register_pattern_category( $category_name, $category );
+			if ( ! $registry->is_registered( $category_slug ) ) {
+				$this->register_pattern_category( $category_slug, $category );
 			}
 
-			$valid_categories[] = $category_name;
+			$valid_categories[] = $category_slug;
 		}
 
 		return $valid_categories;
@@ -132,45 +132,26 @@ class Registration {
 	/**
 	 * Register a single pattern category
 	 *
-	 * @param string $category_name The category slug
+	 * @param string $category_slug The category slug
 	 * @param string $original_category The original category name from API
 	 * @return void
 	 */
-	private function register_pattern_category( $category_name, $original_category ): void {
-		$label = $this->generate_category_label( $category_name, $original_category );
+	private function register_pattern_category( $category_slug, $original_category ): void {
+		$label = $this->generate_category_label( $original_category );
 
-		register_block_pattern_category( $category_name, [
+		register_block_pattern_category( $category_slug, [
 			'label' => $label,
 		] );
 	}
 
 	/**
-	 * Map API category names to WordPress pattern category names
-	 *
-	 * @param string $api_category Category name from API
-	 * @return string WordPress pattern category name
-	 */
-	private function map_api_category_to_wp_category( $api_category ): string {
-		// If it already has spectrum prefix, use as-is
-		if ( strpos( $api_category, 'spectrum-' ) === 0 ) {
-			return $api_category;
-		}
-
-		// Otherwise, prefix with spectrum-
-		return 'spectrum-' . sanitize_title( $api_category );
-	}
-
-	/**
 	 * Generate a human-readable label for a category
 	 *
-	 * @param string $category_name The category slug
+	 * @param string $category_name The original category name from API
 	 * @return string Human-readable category label
 	 */
 	private function generate_category_label( $category_name ): string {
-		// Convert dashes to spaces and title case
-		$display_name = ucwords( str_replace( '-', ' ', $category_name ) );
-
-		// Add Spectrum prefix to the label
-		return sprintf( __( '%s', 'spectrum' ), $display_name );
+		// Use the original category name as the label
+		return $category_name;
 	}
 }

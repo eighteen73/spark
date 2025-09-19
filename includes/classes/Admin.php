@@ -23,8 +23,11 @@ class Admin {
 		add_action( 'admin_init', [ $this, 'handle_admin_actions' ] );
 		add_action( 'admin_notices', [ $this, 'show_admin_notices' ] );
 
-		// Clear cache when plugin is deactivated
-		register_deactivation_hook( SPECTRUM_PATH . 'spectrum.php', [ $this, 'clear_cache_on_deactivation' ] );
+		// Schedule weekly sync
+		add_action( 'spectrum_weekly_sync', [ $this, 'weekly_sync' ] );
+
+		// Clear patterns when plugin is deactivated
+		register_deactivation_hook( SPECTRUM_PATH . 'spectrum.php', [ $this, 'clear_patterns_on_deactivation' ] );
 	}
 
 	/**
@@ -92,20 +95,12 @@ class Admin {
 		$cache = Cache::instance();
 
 		switch ( $_POST['spectrum_action'] ) {
-			case 'refresh_cache':
-				$result = $cache->refresh_patterns();
+			case 'update_patterns':
+				$result = $cache->update_patterns();
 				if ( is_wp_error( $result ) ) {
 					set_transient( 'spectrum_admin_error', $result->get_error_message(), 30 );
 				} else {
-					set_transient( 'spectrum_admin_success', __( 'Cache refreshed successfully!', 'spectrum' ), 30 );
-				}
-				break;
-
-			case 'clear_cache':
-				if ( $cache->clear_patterns() ) {
-					set_transient( 'spectrum_admin_success', __( 'Cache cleared successfully!', 'spectrum' ), 30 );
-				} else {
-					set_transient( 'spectrum_admin_error', __( 'Failed to clear cache.', 'spectrum' ), 30 );
+					set_transient( 'spectrum_admin_success', __( 'Patterns updated successfully!', 'spectrum' ), 30 );
 				}
 				break;
 		}
@@ -141,12 +136,23 @@ class Admin {
 	}
 
 	/**
-	 * Clear cache on plugin deactivation
+	 * Weekly sync handler
 	 *
 	 * @return void
 	 */
-	public function clear_cache_on_deactivation(): void {
+	public function weekly_sync(): void {
+		$cache = Cache::instance();
+		$cache->update_patterns();
+	}
+
+	/**
+	 * Clear patterns on plugin deactivation
+	 *
+	 * @return void
+	 */
+	public function clear_patterns_on_deactivation(): void {
 		$cache = Cache::instance();
 		$cache->clear_patterns();
+		$cache->unschedule_weekly_sync();
 	}
 }
