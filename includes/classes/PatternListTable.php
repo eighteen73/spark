@@ -36,6 +36,7 @@ class PatternListTable extends WP_List_Table {
 			'title'         => __( 'Title', 'spectrum' ),
 			'categories'    => __( 'Categories', 'spectrum' ),
 			'description'   => __( 'Description', 'spectrum' ),
+			'lastUpdated'   => __( 'Last Updated', 'spectrum' ),
 			'blockTypes'    => __( 'Block Types', 'spectrum' ),
 			'postTypes'     => __( 'Post Types', 'spectrum' ),
 			'templateTypes' => __( 'Template Types', 'spectrum' ),
@@ -150,6 +151,21 @@ class PatternListTable extends WP_List_Table {
 			case 'description':
 				if ( ! empty( $item['description'] ) ) {
 					return esc_html( wp_trim_words( $item['description'], 15 ) );
+				}
+				return '—';
+
+			case 'lastUpdated':
+				if ( ! empty( $item['lastUpdated'] ) ) {
+					$timestamp = strtotime( $item['lastUpdated'] );
+					if ( $timestamp ) {
+						return sprintf(
+							'<time datetime="%s" title="%s">%s</time>',
+							esc_attr( gmdate( 'c', $timestamp ) ),
+							esc_attr( gmdate( 'Y-m-d H:i:s', $timestamp ) ),
+							esc_html( human_time_diff( $timestamp, current_time( 'timestamp' ) ) . ' ago' )
+						);
+					}
+					return esc_html( $item['lastUpdated'] );
 				}
 				return '—';
 

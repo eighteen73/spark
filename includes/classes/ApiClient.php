@@ -119,6 +119,10 @@ class ApiClient {
 				$validated_pattern['description'] = sanitize_textarea_field( $pattern['description'] );
 			}
 
+			if ( ! empty( $pattern['lastUpdated'] ) ) {
+				$validated_pattern['lastUpdated'] = sanitize_text_field( $pattern['lastUpdated'] );
+			}
+
 			if ( ! empty( $pattern['categories'] ) && is_array( $pattern['categories'] ) ) {
 				$validated_pattern['categories'] = array_map( 'sanitize_text_field', $pattern['categories'] );
 			}
