@@ -97,10 +97,11 @@ class Admin {
 		switch ( $_POST['spectrum_action'] ) {
 			case 'update_patterns':
 				$result = $cache->update_patterns();
+
 				if ( is_wp_error( $result ) ) {
 					set_transient( 'spectrum_admin_error', $result->get_error_message(), 30 );
 				} else {
-					set_transient( 'spectrum_admin_success', __( 'Patterns updated successfully!', 'spectrum' ), 30 );
+					set_transient( 'spectrum_admin_success', sprintf( __( '%d patterns synced successfully', 'spectrum' ), count( $result ) ), 30 );
 				}
 				break;
 		}

@@ -50,14 +50,15 @@ class Cache {
 			return false;
 		}
 
-		$result = update_option( $this->option_key, $patterns );
+		// Always update the timestamp, even if patterns are the same
+		$timestamp = current_time( 'timestamp' );
+		update_option( $this->sync_timestamp_key, $timestamp );
 
-		// Update sync timestamp
-		if ( $result ) {
-			update_option( $this->sync_timestamp_key, current_time( 'timestamp' ) );
-		}
+		// Update patterns (this might return false if data is identical, but that's OK)
+		update_option( $this->option_key, $patterns );
 
-		return $result;
+		// Always return true if we got this far (timestamp was updated)
+		return true;
 	}
 
 	/**
