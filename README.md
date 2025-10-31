@@ -1,10 +1,10 @@
-# Spectrum
+# Spark
 
 A WordPress plugin that fetches and manages block patterns from a remote API, providing a centralised pattern library for consistent design across multiple websites.
 
 ## Overview
 
-Spectrum solves the problem of manually updating block patterns across multiple client websites. Instead of updating patterns individually on each site, you can manage them centrally and have them automatically distributed to all connected websites.
+Spark solves the problem of manually updating block patterns across multiple client websites. Instead of updating patterns individually on each site, you can manage them centrally and have them automatically distributed to all connected websites.
 
 ## Features
 
@@ -32,14 +32,14 @@ Spectrum solves the problem of manually updating block patterns across multiple 
 ### Manual Installation
 
 1. Download the plugin files
-2. Upload the `spectrum` folder to your `/wp-content/plugins/` directory
+2. Upload the `spark` folder to your `/wp-content/plugins/` directory
 3. Activate the plugin through the 'Plugins' menu in WordPress
 4. Configure your credentials (see Configuration section)
 
 ### Via WP-CLI
 
 ```bash
-wp plugin install /path/to/spectrum.zip --activate
+wp plugin install /path/to/spark.zip --activate
 ```
 
 ## Configuration
@@ -49,28 +49,28 @@ wp plugin install /path/to/spectrum.zip --activate
 Add your username and password to your `wp-config.php` file:
 
 ```php
-define( 'SPECTRUM_API_USERNAME', 'your-username' );
-define( 'SPECTRUM_API_PASSWORD', 'your-password' );
-define( 'SPECTRUM_API_URI', 'https://your-api-endpoint.com/patterns' );
+define( 'SPARK_API_USERNAME', 'your-username' );
+define( 'SPARK_API_PASSWORD', 'your-password' );
+define( 'SPARK_API_URI', 'https://your-api-endpoint.com/patterns' );
 ```
 
 **Important**: Never store credentials in the database or plugin files. Always use wp-config.php for security.
 
 ### API Endpoint
 
-The plugin connects to any compatible pattern service API. The endpoint URL is configurable via the `SPECTRUM_API_URI` constant. Contact your administrator for the correct endpoint URL and credentials.
+The plugin connects to any compatible pattern service API. The endpoint URL is configurable via the `SPARK_API_URI` constant. Contact your administrator for the correct endpoint URL and credentials.
 
 ## Usage
 
 ### Initial Setup
 
 1. **Configure API Settings**: Add your username, password, and API URI to wp-config.php
-2. **Fetch Patterns**: Go to Settings → Spectrum and click "Update Patterns"
+2. **Fetch Patterns**: Go to Settings → Spark and click "Update Patterns"
 3. **Verify Patterns**: Check that patterns appear in the table and are available in the block editor
 
 ### Admin Interface
 
-Navigate to **Settings → Spectrum** to access the plugin's admin interface:
+Navigate to **Settings → Spark** to access the plugin's admin interface:
 
 - **Update Patterns**: Manually fetch the latest patterns from the API
 - **Storage Status**: View current storage status and last sync time
@@ -124,27 +124,27 @@ Each pattern includes comprehensive metadata:
 ### File Structure
 
 ```
-spectrum/
-├── spectrum.php              # Main plugin file
-├── autoload.php              # Class autoloader
-├── composer.json             # Composer dependencies
+spark/
+├── spark.php                    # Main plugin file
+├── autoload.php                 # Class autoloader
+├── composer.json                # Composer dependencies
 ├── includes/
 │   └── classes/
-│       ├── Admin.php         # Admin interface logic
-│       ├── AdminPage.php     # Admin page rendering
-│       ├── ApiClient.php     # API communication
-│       ├── Cache.php         # Pattern storage management
+│       ├── Admin.php            # Admin interface logic
+│       ├── AdminPage.php        # Admin page rendering
+│       ├── ApiClient.php        # API communication
+│       ├── Cache.php            # Pattern storage management
 │       ├── PatternListTable.php # Admin table display
-│       ├── Registration.php  # Pattern registration
-│       └── Singleton.php     # Singleton trait
-└── README.md                 # This file
+│       ├── Registration.php     # Pattern registration
+│       └── Singleton.php        # Singleton trait
+└── README.md                    # This file
 ```
 
 ### Hooks and Filters
 
 The plugin provides several WordPress hooks for customization:
 
-- `spectrum_weekly_sync`: Fired during weekly pattern sync
+- `spark_weekly_sync`: Fired during weekly pattern sync
 - Admin action hooks for pattern management
 
 ## License

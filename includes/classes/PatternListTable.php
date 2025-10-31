@@ -2,10 +2,10 @@
 /**
  * Pattern List Table class
  *
- * @package Spectrum
+ * @package Spark
  */
 
-namespace Eighteen73\Spectrum;
+namespace Eighteen73\Spark;
 
 use WP_List_Table;
 
@@ -32,16 +32,16 @@ class PatternListTable extends WP_List_Table {
 	 */
 	public function get_columns(): array {
 		$columns = [
-			'name'          => __( 'Name', 'spectrum' ),
-			'title'         => __( 'Title', 'spectrum' ),
-			'categories'    => __( 'Categories', 'spectrum' ),
-			'description'   => __( 'Description', 'spectrum' ),
-			'lastUpdated'   => __( 'Last Updated', 'spectrum' ),
-			'blockTypes'    => __( 'Block Types', 'spectrum' ),
-			'postTypes'     => __( 'Post Types', 'spectrum' ),
-			'templateTypes' => __( 'Template Types', 'spectrum' ),
-			'viewportWidth' => __( 'Viewport Width', 'spectrum' ),
-			'inserter'      => __( 'Inserter', 'spectrum' ),
+			'name'          => __( 'Name', 'spark' ),
+			'title'         => __( 'Title', 'spark' ),
+			'categories'    => __( 'Categories', 'spark' ),
+			'description'   => __( 'Description', 'spark' ),
+			'lastUpdated'   => __( 'Last Updated', 'spark' ),
+			'blockTypes'    => __( 'Block Types', 'spark' ),
+			'postTypes'     => __( 'Post Types', 'spark' ),
+			'templateTypes' => __( 'Template Types', 'spark' ),
+			'viewportWidth' => __( 'Viewport Width', 'spark' ),
+			'inserter'      => __( 'Inserter', 'spark' ),
 		];
 
 		return $columns;
@@ -99,7 +99,7 @@ class PatternListTable extends WP_List_Table {
 			return ( $order === 'desc' ) ? -$result : $result;
 		} );
 
-		$per_page     = $this->get_items_per_page( 'spectrum_patterns_per_page', 20 );
+		$per_page     = $this->get_items_per_page( 'spark_patterns_per_page', 20 );
 		$current_page = $this->get_pagenum();
 		$total_items  = count( $patterns );
 
@@ -205,10 +205,10 @@ class PatternListTable extends WP_List_Table {
 			case 'inserter':
 				if ( isset( $item['inserter'] ) ) {
 					return $item['inserter'] ?
-						'<span style="color: #46b450;">●</span> ' . esc_html__( 'Yes', 'spectrum' ) :
-						'<span style="color: #dc3232;">●</span> ' . esc_html__( 'No', 'spectrum' );
+						'<span style="color: #46b450;">●</span> ' . esc_html__( 'Yes', 'spark' ) :
+						'<span style="color: #dc3232;">●</span> ' . esc_html__( 'No', 'spark' );
 				}
-				return '<span style="color: #46b450;">●</span> ' . esc_html__( 'Yes', 'spectrum' );
+				return '<span style="color: #46b450;">●</span> ' . esc_html__( 'Yes', 'spark' );
 
 			default:
 				return '';
@@ -221,7 +221,7 @@ class PatternListTable extends WP_List_Table {
 	 * @return void
 	 */
 	public function no_items(): void {
-		esc_html_e( 'No patterns found in cache.', 'spectrum' );
+		esc_html_e( 'No patterns found in cache.', 'spark' );
 	}
 
 }

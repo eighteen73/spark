@@ -2,15 +2,16 @@
 /**
  * Admin class
  *
- * @package Spectrum
+ * @package Spark
  */
 
-namespace Eighteen73\Spectrum;
+namespace Eighteen73\Spark;
 
 /**
  * Handles admin interface and cache management.
  */
 class Admin {
+
 	use Singleton;
 
 	/**
@@ -24,10 +25,7 @@ class Admin {
 		add_action( 'admin_notices', [ $this, 'show_admin_notices' ] );
 
 		// Schedule weekly sync
-		add_action( 'spectrum_weekly_sync', [ $this, 'weekly_sync' ] );
-
-		// Clear patterns when plugin is deactivated
-		register_deactivation_hook( SPECTRUM_PATH . 'spectrum.php', [ $this, 'clear_patterns_on_deactivation' ] );
+		add_action( 'spark_weekly_sync', [ $this, 'weekly_sync' ] );
 	}
 
 	/**
@@ -37,11 +35,11 @@ class Admin {
 	 */
 	public function add_admin_menu(): void {
 		$hook = add_options_page(
-			__( 'Spectrum', 'spectrum' ),
-			__( 'Spectrum', 'spectrum' ),
+			__( 'Spark', 'spark' ),
+			__( 'Spark', 'spark' ),
 			'manage_options',
-			'spectrum',
-			[ 'Eighteen73\Spectrum\AdminPage', 'render' ]
+			'spark',
+			[ AdminPage::class, 'render' ]
 		);
 
 		// Add screen options support
@@ -61,9 +59,9 @@ class Admin {
 
 		// Add per-page option
 		add_screen_option( 'per_page', [
-			'label'   => __( 'Patterns per page', 'spectrum' ),
+			'label'   => __( 'Patterns per page', 'spark' ),
 			'default' => 20,
-			'option'  => 'spectrum_patterns_per_page',
+			'option'  => 'spark_patterns_per_page',
 		] );
 
 		// Register columns for screen options
@@ -84,7 +82,7 @@ class Admin {
 	 * @return void
 	 */
 	public function handle_admin_actions(): void {
-		if ( ! isset( $_POST['spectrum_action'] ) || ! wp_verify_nonce( $_POST['spectrum_nonce'], 'spectrum_admin' ) ) {
+		if ( ! isset( $_POST['spark_action'] ) || ! wp_verify_nonce( $_POST['spark_nonce'], 'spark_admin' ) ) {
 			return;
 		}
 
@@ -94,19 +92,19 @@ class Admin {
 
 		$cache = Cache::instance();
 
-		switch ( $_POST['spectrum_action'] ) {
+		switch ( $_POST['spark_action'] ) {
 			case 'update_patterns':
 				$result = $cache->update_patterns();
 
 				if ( is_wp_error( $result ) ) {
-					set_transient( 'spectrum_admin_error', $result->get_error_message(), 30 );
+					set_transient( 'spark_admin_error', $result->get_error_message(), 30 );
 				} else {
-					set_transient( 'spectrum_admin_success', sprintf( __( '%d patterns synced successfully', 'spectrum' ), count( $result ) ), 30 );
+					set_transient( 'spark_admin_success', sprintf( __( '%d patterns synced successfully', 'spark' ), count( $result ) ), 30 );
 				}
 				break;
 		}
 
-		wp_redirect( admin_url( 'options-general.php?page=spectrum' ) );
+		wp_redirect( admin_url( 'options-general.php?page=spark' ) );
 		exit;
 	}
 
@@ -116,15 +114,15 @@ class Admin {
 	 * @return void
 	 */
 	public function show_admin_notices(): void {
-		$success_message = get_transient( 'spectrum_admin_success' );
-		$error_message   = get_transient( 'spectrum_admin_error' );
+		$success_message = get_transient( 'spark_admin_success' );
+		$error_message   = get_transient( 'spark_admin_error' );
 
 		if ( $success_message ) {
 			printf(
 				'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
 				esc_html( $success_message )
 			);
-			delete_transient( 'spectrum_admin_success' );
+			delete_transient( 'spark_admin_success' );
 		}
 
 		if ( $error_message ) {
@@ -132,7 +130,7 @@ class Admin {
 				'<div class="notice notice-error is-dismissible"><p>%s</p></div>',
 				esc_html( $error_message )
 			);
-			delete_transient( 'spectrum_admin_error' );
+			delete_transient( 'spark_admin_error' );
 		}
 	}
 
@@ -144,16 +142,5 @@ class Admin {
 	public function weekly_sync(): void {
 		$cache = Cache::instance();
 		$cache->update_patterns();
-	}
-
-	/**
-	 * Clear patterns on plugin deactivation
-	 *
-	 * @return void
-	 */
-	public function clear_patterns_on_deactivation(): void {
-		$cache = Cache::instance();
-		$cache->clear_patterns();
-		$cache->unschedule_weekly_sync();
 	}
 }

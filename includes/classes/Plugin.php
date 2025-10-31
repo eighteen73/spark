@@ -1,18 +1,19 @@
 <?php
 /**
- * Registration class
+ * Main plugin class.
  *
- * @package Spectrum
+ * @package Spark
  */
 
-namespace Eighteen73\Spectrum;
+namespace Eighteen73\Spark;
 
 use WP_Block_Pattern_Categories_Registry;
 
 /**
  * Handles registration logic.
  */
-class Registration {
+class Plugin {
+
 	use Singleton;
 
 	/**
@@ -21,7 +22,39 @@ class Registration {
 	 * @return void
 	 */
 	public function setup(): void {
+		add_action( 'init', [ $this, 'load_textdomain' ] );
 		add_action( 'init', [ $this, 'register_patterns' ] );
+	}
+
+	/**
+	 * Load plugin textdomain.
+	 *
+	 * @return void
+	 */
+	public function load_textdomain(): void {
+		load_plugin_textdomain(
+			'spark',
+			false,
+			SPARK_PATH . '/languages'
+		);
+	}
+
+	/**
+	 * Plugin activation.
+	 *
+	 * @return void
+	 */
+	public static function activation(): void {}
+
+	/**
+	 * Plugin deactivation.
+	 *
+	 * @return void
+	 */
+	public static function deactivation(): void {
+		$cache = Cache::instance();
+		$cache->clear_patterns();
+		$cache->unschedule_weekly_sync();
 	}
 
 	/**
@@ -44,7 +77,7 @@ class Registration {
 			} else {
 				// Log the error for debugging
 				if ( is_wp_error( $patterns ) ) {
-					error_log( 'Spectrum: Failed to fetch patterns - ' . $patterns->get_error_message() );
+					error_log( 'Spark: Failed to fetch patterns - ' . $patterns->get_error_message() );
 				}
 
 				// Fall back to any existing cache or return early

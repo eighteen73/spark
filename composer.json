@@ -1,9 +1,12 @@
 {
-	"name": "eighteen73/spectrum",
-	"description": "A collection of block patterns for WordPress.",
+	"name": "eighteen73/spark",
+	"description": "Fetch and manage block patterns from a remote API, providing a centralised pattern library for consistent design across multiple websites.",
 	"type": "wordpress-plugin",
 	"require-dev": {
 		"eighteen73/wordpress-coding-standards": "^2.0"
+	},
+	"require": {
+		"php": ">=8.3"
 	},
 	"config": {
 		"allow-plugins": {
@@ -11,8 +14,7 @@
 		}
 	},
 	"scripts": {
-		"test": [
-			"phpcs"
-		]
+		"lint": "./vendor/bin/phpcs",
+		"format": "./vendor/bin/phpcbf"
 	}
 }
