@@ -2,10 +2,10 @@
 /**
  * Cache class
  *
- * @package Spectrum
+ * @package Spark
  */
 
-namespace Eighteen73\Spectrum;
+namespace Eighteen73\Spark;
 
 use WP_Error;
 
@@ -13,6 +13,7 @@ use WP_Error;
  * Handles storage of pattern data using WordPress Options API.
  */
 class Cache {
+
 	use Singleton;
 
 	/**
@@ -20,14 +21,14 @@ class Cache {
 	 *
 	 * @var string
 	 */
-	private $option_key = 'spectrum_patterns';
+	private $option_key = 'spark_patterns';
 
 	/**
 	 * Option key for storing last sync timestamp
 	 *
 	 * @var string
 	 */
-	private $sync_timestamp_key = 'spectrum_patterns_sync_timestamp';
+	private $sync_timestamp_key = 'spark_patterns_sync_timestamp';
 
 	/**
 	 * Get stored patterns
@@ -128,8 +129,8 @@ class Cache {
 	 * Schedule weekly sync
 	 */
 	public function schedule_weekly_sync(): void {
-		if ( ! wp_next_scheduled( 'spectrum_weekly_sync' ) ) {
-			wp_schedule_event( time(), 'weekly', 'spectrum_weekly_sync' );
+		if ( ! wp_next_scheduled( 'spark_weekly_sync' ) ) {
+			wp_schedule_event( time(), 'weekly', 'spark_weekly_sync' );
 		}
 	}
 
@@ -137,9 +138,9 @@ class Cache {
 	 * Unschedule weekly sync
 	 */
 	public function unschedule_weekly_sync(): void {
-		$timestamp = wp_next_scheduled( 'spectrum_weekly_sync' );
+		$timestamp = wp_next_scheduled( 'spark_weekly_sync' );
 		if ( $timestamp ) {
-			wp_unschedule_event( $timestamp, 'spectrum_weekly_sync' );
+			wp_unschedule_event( $timestamp, 'spark_weekly_sync' );
 		}
 	}
 }

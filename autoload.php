@@ -9,13 +9,13 @@
  *
  * @return void
  *
- * @package Spectrum
+ * @package Spark
  */
 
 spl_autoload_register(
 	function ( $class_name ) {
 		$namspaces = [
-			'Eighteen73\\Spectrum\\' => __DIR__ . '/includes/classes/',
+			'Eighteen73\\Spark\\' => __DIR__ . '/includes/classes/',
 		];
 		foreach ( $namspaces as $prefix => $base_dir ) {
 			$len = strlen( $prefix );

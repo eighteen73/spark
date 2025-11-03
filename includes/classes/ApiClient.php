@@ -2,10 +2,10 @@
 /**
  * API Client class
  *
- * @package Spectrum
+ * @package Spark
  */
 
-namespace Eighteen73\Spectrum;
+namespace Eighteen73\Spark;
 
 use WP_Error;
 
@@ -13,6 +13,7 @@ use WP_Error;
  * Handles API communication with the remote patterns server.
  */
 class ApiClient {
+
 	use Singleton;
 
 	/**
@@ -33,15 +34,15 @@ class ApiClient {
 
 		if ( ! $credentials ) {
 			return new WP_Error(
-				'spectrum_no_credentials',
-				__( 'Spectrum credentials not found. Please define SPECTRUM_API_USERNAME and SPECTRUM_API_PASSWORD in wp-config.php', 'spectrum' )
+				'spark_no_credentials',
+				__( 'Spark credentials not found. Please define SPARK_API_USERNAME and SPARK_API_PASSWORD in wp-config.php', 'spark' )
 			);
 		}
 
 		if ( ! $endpoint ) {
 			return new WP_Error(
-				'spectrum_no_uri',
-				__( 'Spectrum API URI not found. Please define SPECTRUM_API_URI in wp-config.php', 'spectrum' )
+				'spark_no_uri',
+				__( 'Spark API URI not found. Please define SPARK_API_URI in wp-config.php', 'spark' )
 			);
 		}
 
@@ -65,10 +66,10 @@ class ApiClient {
 
 		if ( $response_code !== 200 ) {
 			return new WP_Error(
-				'spectrum_api_error',
+				'spark_api_error',
 				sprintf(
 					/* translators: %1$s: HTTP status code, %2$s: response body */
-					__( 'API request failed with status %1$s: %2$s', 'spectrum' ),
+					__( 'API request failed with status %1$s: %2$s', 'spark' ),
 					$response_code,
 					$response_body
 				)
@@ -79,15 +80,15 @@ class ApiClient {
 
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
 			return new \WP_Error(
-				'spectrum_json_error',
-				__( 'Failed to parse API response as JSON', 'spectrum' )
+				'spark_json_error',
+				__( 'Failed to parse API response as JSON', 'spark' )
 			);
 		}
 
 		if ( ! is_array( $patterns ) ) {
 			return new \WP_Error(
-				'spectrum_invalid_response',
-				__( 'API response is not a valid array of patterns', 'spectrum' )
+				'spark_invalid_response',
+				__( 'API response is not a valid array of patterns', 'spark' )
 			);
 		}
 
@@ -100,8 +101,8 @@ class ApiClient {
 	 * @return array|false Array with username and password, or false if not found
 	 */
 	private function get_api_credentials(): array|false {
-		$username = defined( 'SPECTRUM_API_USERNAME' ) ? constant( 'SPECTRUM_API_USERNAME' ) : false;
-		$password = defined( 'SPECTRUM_API_PASSWORD' ) ? constant( 'SPECTRUM_API_PASSWORD' ) : false;
+		$username = defined( 'SPARK_API_USERNAME' ) ? constant( 'SPARK_API_USERNAME' ) : false;
+		$password = defined( 'SPARK_API_PASSWORD' ) ? constant( 'SPARK_API_PASSWORD' ) : false;
 
 		if ( ! $username || ! $password ) {
 			return false;
@@ -119,7 +120,7 @@ class ApiClient {
 	 * @return string|false API URI or false if not found
 	 */
 	private function get_api_endpoint(): string|false {
-		return defined( 'SPECTRUM_API_URI' ) ? constant( 'SPECTRUM_API_URI' ) : false;
+		return defined( 'SPARK_API_URI' ) ? constant( 'SPARK_API_URI' ) : false;
 	}
 
 	/**
