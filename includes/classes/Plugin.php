@@ -159,6 +159,17 @@ class Plugin {
 			$valid_categories[] = $category_slug;
 		}
 
+		// Allow additional categories to be registered via filter
+		$additional_categories = apply_filters( 'spark_additional_pattern_categories', [ 'spark' => __( 'Spark', 'spark' ) ] );
+
+		foreach ( $additional_categories as $category ) {
+			$category_slug = sanitize_title( $category );
+			if ( ! $registry->is_registered( $category_slug ) ) {
+				$this->register_pattern_category( $category_slug, $category );
+			}
+			$valid_categories[] = $category_slug;
+		}
+
 		return $valid_categories;
 	}
 
